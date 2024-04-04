@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 
 class Expense(models.Model):
 
-    tilte=models.CharField(max_length=200)
+    title=models.CharField(max_length=200)
 
     amount=models.PositiveIntegerField()
 
@@ -44,6 +44,27 @@ class Expense(models.Model):
     
 
 
+class Income (models. Model):
+    title=models.CharField(max_length=200)
+    amount=models.PositiveIntegerField()
+    owner=models. ForeignKey(User, on_delete=models. CASCADE)
+    created_date=models.DateField(auto_now_add=True)
+    income_categories = (
+    ("Salary", "Salary"), 
+    ("Business", "Business"),
+    ("Investment", "Investment"),
+    ("Rental", "Rental"), 
+    ("Interest", "Interest"), 
+    ("Dividend", "Dividend"),
+    ("Royalty", "Royalty"),
+    ("Capital","Capitat"),
+    ("Pension", "Pension"),
+    ("SocialSecurity", "SocialSecurity")
+    )
+    category=models.CharField(max_length=200, choices=income_categories,default="Salary")
 
+
+    def _str_(self) :
+        return self.title
 
 
