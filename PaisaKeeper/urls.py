@@ -33,7 +33,9 @@ urlpatterns = [
     path("api/v2/expenses/<int:pk>/",views.ExpenseDetailView.as_view()),
 
     path("api/v2/incomes/",views.IncomeListCreateView.as_view()),
-    path("api/v2/incomes/<int:pk>/",views.IncomeDetailView.as_view())
+    path("api/v2/incomes/<int:pk>/",views.IncomeDetailView.as_view()),
+
+    path("api/v2/summary/",views.TransactionSummaryView.as_view())
 
 ]+router.urls
 

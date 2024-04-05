@@ -1,4 +1,7 @@
 from django.shortcuts import render
+from django.contrib.auth.models import User
+from django.utils import timezone
+from django.db.models import Sum
 
 from rest_framework.response import Response
 from rest_framework import status
@@ -9,7 +12,7 @@ from rest_framework.generics import CreateAPIView,RetrieveAPIView,DestroyAPIView
 
 from budget.serializers import UserSerializer,ExpenseSerializer,Incomeserializer
 from budget.models import Expense,Income
-from django.contrib.auth.models import User
+from budget.permissions import IsOwner,IsOwnerOrAdmin
 
 # Create your views here.
 
@@ -76,11 +79,10 @@ class IncomeViewsetView(ViewSet):
 class ExpenseDetailView(RetrieveAPIView,DestroyAPIView,UpdateAPIView):
 
     authentication_classes=[authentication.BasicAuthentication]
-    permission_classes=[permissions.IsAuthenticated]
+    permission_classes=[IsOwner]
 
     serializer_class=ExpenseSerializer
     queryset=Expense.objects.all()
-
 
 
 
@@ -109,7 +111,61 @@ class IncomeDetailView(RetrieveAPIView,UpdateAPIView,DestroyAPIView):
 
 
     authentication_classes=[authentication.BasicAuthentication]
-    permission_classes=[permissions.IsAuthenticated]
+    permission_classes=[IsOwnerOrAdmin]
 
     serializer_class=Incomeserializer
     queryset=Income.objects.all()
+
+
+
+
+class TransactionSummaryView(APIView):
+
+    authentication_classes=[authentication.BasicAuthentication]
+    permission_classes=[permissions.IsAuthenticated]
+
+    def get(self,request,*args,**kwargs):
+
+        cur_month=timezone.now().month
+        cur_year=timezone.now().year
+
+        all_expenses=Expense.objects.filter(
+            owner=request.user,
+            created_date__year=cur_year,
+            created_date__month=cur_month
+        )
+
+
+        all_incomes=Income .objects.filter(
+            owner=request.user,
+            created_date__year=cur_year,
+            created_date__month=cur_month
+        )
+
+        total_expense=all_expenses.values("amount").aggregate(total=Sum("amount"))
+
+        total_income=all_incomes.values("amount").aggregate(total=Sum("amount"))
+
+        expense_summary=all_expenses.values("category").annotate(total=Sum("amount"))
+
+        income_summary=all_incomes.values("category").annotate(total=Sum("amount"))
+
+
+        print("total income",total_income)
+        print("total expense", total_expense)
+        print("income summary", income_summary)
+        print("expense summary", expense_summary)
+
+
+        data={}
+
+        data["expense_total"]=total_expense.get("total")
+
+        data["income_total"]=total_income.get("total")
+        
+
+        return Response(data=data)
+
+
+
+
