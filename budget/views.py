@@ -146,24 +146,40 @@ class TransactionSummaryView(APIView):
 
         total_income=all_incomes.values("amount").aggregate(total=Sum("amount"))
 
-        expense_summary=all_expenses.values("category").annotate(total=Sum("amount"))
+        expense_summary=list(all_expenses.values("category").annotate(total=Sum("amount")))
 
-        income_summary=all_incomes.values("category").annotate(total=Sum("amount"))
+        income_summary=list(all_incomes.values("category").annotate(total=Sum("amount")))
 
 
-        print("total income",total_income)
-        print("total expense", total_expense)
-        print("income summary", income_summary)
-        print("expense summary", expense_summary)
+        # print("total income",total_income)
+        # print("total expense", total_expense)
+        # print("income summary", income_summary)
+        # print("expense summary", expense_summary)
 
 
         data={}
 
-        data["expense_total"]=total_expense.get("total")
+        data["expense_total"]=total_expense.get("total") or 0
 
-        data["income_total"]=total_income.get("total")
+        data["income_total"]=total_income.get("total") or 0
+
+        data["expense_summary"]=expense_summary
+
+        data["income_summary"]=income_summary
+
+        total_expenses=total_expense.get("total") or 0
+
+        total_incomes=total_income.get("total") or 0
+
+        data["savings"]=total_incomes - total_expenses
+
+        priority_summary=list(all_expenses.values("priority").annotate(total=Sum("amount")))
+        data["expense_priority_summary"]=priority_summary
+
         
 
+        
+ 
         return Response(data=data)
 
 
